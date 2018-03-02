@@ -359,13 +359,25 @@ inline RCP<const UniversalSet> universalset()
     return UniversalSet::getInstance();
 }
 
+template<class set_type, TypeID type_id>
+inline RCP<const Set> finiteset(const set_type &container)
+{
+    if (FiniteSetT<set_type, type_id>::is_canonical(container)) {
+        return make_rcp<const FiniteSetT<set_type, type_id>>(container);
+    }
+    return emptyset();
+}
+
 //! \return RCP<const Set>
 inline RCP<const Set> finiteset(const set_basic &container)
 {
-    if (FiniteSet::is_canonical(container)) {
-        return make_rcp<const FiniteSet>(container);
-    }
-    return emptyset();
+    return finiteset<set_basic, FINITESET>(container);
+}
+
+//! \return RCP<const Set>
+inline RCP<const Set> finitemultiset(const multiset_basic &container)
+{
+    return finiteset<multiset_basic, FINITEMULTISET>(container);
 }
 
 //! \return RCP<const Set>

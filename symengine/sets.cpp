@@ -372,20 +372,29 @@ RCP<const Boolean> FiniteSetT<set_type, type_id>::contains(const RCP<const Basic
     }
 }
 
-template<>
-RCP<const Set> FiniteSet::set_union(const RCP<const Set> &o) const
+template<class set_type, TypeID type_id>
+RCP<const Set> FiniteSetT<set_type, type_id>::set_union(const RCP<const Set> &o) const
 {
     if (is_a<FiniteSet>(*o)) {
         const FiniteSet &other = down_cast<const FiniteSet &>(*o);
-        set_basic container;
+        set_type container;
         std::set_union(container_.begin(), container_.end(),
-                       other.container_.begin(), other.container_.end(),
+                       other.get_container().begin(), other.get_container().end(),
                        std::inserter(container, container.begin()),
                        RCPBasicKeyLess{});
-        return finiteset(container);
+        return finiteset<set_type, type_id>(container);
+    }
+    if (is_a<FiniteMultiSet>(*o)) {
+        const FiniteMultiSet &other = down_cast<const FiniteMultiSet &>(*o);
+        multiset_basic container;
+        std::set_union(container_.begin(), container_.end(),
+                       other.get_container().begin(), other.get_container().end(),
+                       std::inserter(container, container.begin()),
+                       RCPBasicKeyLess{});
+        return finitemultiset(container);
     }
     if (is_a<Interval>(*o)) {
-        set_basic container;
+        set_type container;
         const Interval &other = down_cast<const Interval &>(*o);
         bool left = other.get_left_open(), right = other.get_right_open();
         for (const auto &a : container_) {
@@ -409,10 +418,10 @@ RCP<const Set> FiniteSet::set_union(const RCP<const Set> &o) const
         if (not container.empty()) {
             if (left == other.get_left_open()
                 and right == other.get_right_open()) {
-                return SymEngine::make_set_union({finiteset(container), o});
+                return SymEngine::make_set_union({finiteset<set_type, type_id>(container), o});
             } else {
                 return SymEngine::make_set_union(
-                    set_set({finiteset(container),
+                    set_set({finiteset<set_type, type_id>(container),
                              interval(other.get_start(), other.get_end(), left,
                                       right)}));
             }
@@ -432,20 +441,29 @@ RCP<const Set> FiniteSet::set_union(const RCP<const Set> &o) const
     return SymEngine::make_set_union({rcp_from_this_cast<const Set>(), o});
 }
 
-template<>
-RCP<const Set> FiniteSet::set_intersection(const RCP<const Set> &o) const
+template<class set_type, TypeID type_id>
+RCP<const Set> FiniteSetT<set_type, type_id>::set_intersection(const RCP<const Set> &o) const
 {
     if (is_a<FiniteSet>(*o)) {
         const FiniteSet &other = down_cast<const FiniteSet &>(*o);
-        set_basic container;
+        set_type container;
         std::set_intersection(container_.begin(), container_.end(),
-                              other.container_.begin(), other.container_.end(),
+                              other.get_container().begin(), other.get_container().end(),
                               std::inserter(container, container.begin()),
                               RCPBasicKeyLess{});
-        return finiteset(container);
+        return finiteset<set_type, type_id>(container);
+    }
+    if (is_a<FiniteMultiSet>(*o)) {
+        const FiniteMultiSet &other = down_cast<const FiniteMultiSet &>(*o);
+        multiset_basic container;
+        std::set_intersection(container_.begin(), container_.end(),
+                              other.get_container().begin(), other.get_container().end(),
+                              std::inserter(container, container.begin()),
+                              RCPBasicKeyLess{});
+        return finitemultiset(container);
     }
     if (is_a<Interval>(*o)) {
-        set_basic container;
+        set_type container;
         for (const auto &a : container_) {
             auto contain = o->contains(a);
             if (eq(*contain, *boolTrue))
@@ -453,7 +471,7 @@ RCP<const Set> FiniteSet::set_intersection(const RCP<const Set> &o) const
             if (is_a<Contains>(*contain))
                 throw SymEngineException("Not implemented");
         }
-        return finiteset(container);
+        return finiteset<set_type, type_id>(container);
     }
     if (is_a<UniversalSet>(*o) or is_a<EmptySet>(*o) or is_a<Union>(*o)) {
         return (*o).set_intersection(rcp_from_this_cast<const Set>());
@@ -461,17 +479,27 @@ RCP<const Set> FiniteSet::set_intersection(const RCP<const Set> &o) const
     throw SymEngineException("Not implemented Intersection class");
 }
 
-template<>
-RCP<const Set> FiniteSet::set_complement(const RCP<const Set> &o) const
+template<class set_type, TypeID type_id>
+RCP<const Set> FiniteSetT<set_type, type_id>::set_complement(const RCP<const Set> &o) const
 {
     if (is_a<FiniteSet>(*o)) {
         const FiniteSet &other = down_cast<const FiniteSet &>(*o);
-        set_basic container;
-        std::set_difference(other.container_.begin(), other.container_.end(),
+        set_type container;
+        std::set_difference(other.get_container().begin(), other.get_container().end(),
                             container_.begin(), container_.end(),
                             std::inserter(container, container.begin()),
                             RCPBasicKeyLess{});
-        return finiteset(container);
+        return finiteset<set_type, type_id>(container);
+    }
+
+    if (is_a<FiniteMultiSet>(*o)) {
+        const FiniteMultiSet &other = down_cast<const FiniteMultiSet &>(*o);
+        multiset_basic container;
+        std::set_difference(other.get_container().begin(), other.get_container().end(),
+                            container_.begin(), container_.end(),
+                            std::inserter(container, container.begin()),
+                            RCPBasicKeyLess{});
+        return finitemultiset(container);
     }
 
     if (is_a<Interval>(*o)) {
@@ -479,7 +507,7 @@ RCP<const Set> FiniteSet::set_complement(const RCP<const Set> &o) const
         auto &other = down_cast<const Interval &>(*o);
         RCP<const Number> last = other.get_start();
         RCP<const Number> a_num;
-        set_basic rest;
+        set_type rest;
         bool left_open = other.get_left_open(),
              right_open = other.get_right_open();
         for (auto it = container_.begin(); it != container_.end(); it++) {
@@ -511,22 +539,22 @@ RCP<const Set> FiniteSet::set_complement(const RCP<const Set> &o) const
             return SymEngine::make_set_union(intervals);
         } else {
             return make_rcp<const Complement>(
-                SymEngine::make_set_union(intervals), finiteset(rest));
+                SymEngine::make_set_union(intervals), finiteset<set_type, type_id>(rest));
         }
     }
 
     return SymEngine::set_complement_helper(rcp_from_this_cast<const Set>(), o);
 }
 
-template<>
-RCP<const Set> FiniteSet::create(const set_basic &container) const
+template<class set_type, TypeID type_id>
+RCP<const Set> FiniteSetT<set_type, type_id>::create(const set_type &container) const
 {
-    return finiteset(container);
+    return finiteset<set_type, type_id>(container);
 }
 
 // Explicit template instantiation
 template class FiniteSetT<set_basic, FINITESET>;
-// template class FiniteSetT<multiset_basic, FINITEMULTISET>;
+template class FiniteSetT<multiset_basic, FINITEMULTISET>;
 
 Union::Union(const set_set &in) : container_(in)
 {
