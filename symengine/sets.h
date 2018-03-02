@@ -113,13 +113,14 @@ public:
     };
 };
 
-class FiniteSet : public Set
+template<class set_type, TypeID type_id>
+class FiniteSetT : public Set
 {
 private:
-    set_basic container_;
+    set_type container_;
 
 public:
-    IMPLEMENT_TYPEID(FINITESET)
+    IMPLEMENT_TYPEID(type_id)
     virtual hash_t __hash__() const;
     virtual bool __eq__(const Basic &o) const;
     virtual int compare(const Basic &o) const;
@@ -128,20 +129,23 @@ public:
         return vec_basic(container_.begin(), container_.end());
     }
 
-    FiniteSet(const set_basic &container);
-    static bool is_canonical(const set_basic &container);
+    FiniteSetT(const set_type &container);
+    static bool is_canonical(const set_type &container);
 
     virtual RCP<const Set> set_union(const RCP<const Set> &o) const;
     virtual RCP<const Set> set_intersection(const RCP<const Set> &o) const;
     virtual RCP<const Set> set_complement(const RCP<const Set> &o) const;
     virtual RCP<const Boolean> contains(const RCP<const Basic> &a) const;
-    RCP<const Set> create(const set_basic &container) const;
+    RCP<const Set> create(const set_type &container) const;
 
-    inline const set_basic &get_container() const
+    inline const set_type &get_container() const
     {
         return this->container_;
     }
 };
+
+typedef FiniteSetT<set_basic, FINITESET> FiniteSet;
+typedef FiniteSetT<multiset_basic, FINITEMULTISET> FiniteMultiSet;
 
 class Interval : public Set
 {

@@ -39,7 +39,9 @@ namespace SymEngine
 enum TypeID {
 #define SYMENGINE_INCLUDE_ALL
 #define SYMENGINE_ENUM(type, Class) type,
+#define SYMENGINE_ENUM_TEMPLATE(type, Class) SYMENGINE_ENUM(type, Class)
 #include "symengine/type_codes.inc"
+#undef SYMENGINE_ENUM_TEMPLATE
 #undef SYMENGINE_ENUM
 #undef SYMENGINE_INCLUDE_ALL
     // The 'TypeID_Count' returns the number of elements in 'TypeID'. For this

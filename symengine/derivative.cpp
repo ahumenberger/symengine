@@ -695,7 +695,9 @@ public:
     }
 
 #define SYMENGINE_ENUM(TypeID, Class) IMPLEMENT_DIFF(Class)
+#define SYMENGINE_ENUM_TEMPLATE(TypeID, Class) template<> SYMENGINE_ENUM(TypeID, Class)
 #include "symengine/type_codes.inc"
+#undef SYMENGINE_ENUM_TEMPLATE
 #undef SYMENGINE_ENUM
 
 RCP<const Basic> diff(const RCP<const Basic> &arg, const RCP<const Symbol> &x)

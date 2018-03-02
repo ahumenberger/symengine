@@ -728,7 +728,9 @@ double eval_double_visitor_pattern(const Basic &b)
     }
 
 #define SYMENGINE_ENUM(TypeID, Class) ACCEPT(Class)
+#define SYMENGINE_ENUM_TEMPLATE(TypeID, Class) template<> SYMENGINE_ENUM(TypeID, Class)
 #include "symengine/type_codes.inc"
+#undef SYMENGINE_ENUM_TEMPLATE
 #undef SYMENGINE_ENUM
 
 } // SymEngine

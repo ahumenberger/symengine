@@ -32,7 +32,9 @@ class Visitor
 {
 public:
 #define SYMENGINE_ENUM(TypeID, Class) virtual void visit(const Class &) = 0;
+#define SYMENGINE_ENUM_TEMPLATE(TypeID, Class) SYMENGINE_ENUM(TypeID, Class)
 #include "symengine/type_codes.inc"
+#undef SYMENGINE_ENUM_TEMPLATE
 #undef SYMENGINE_ENUM
 };
 
@@ -67,7 +69,9 @@ public:
     {                                                                          \
         down_cast<Derived *>(this)->bvisit(x);                                 \
     };
+#define SYMENGINE_ENUM_TEMPLATE(TypeID, Class) SYMENGINE_ENUM(TypeID, Class)
 #include "symengine/type_codes.inc"
+#undef SYMENGINE_ENUM_TEMPLATE
 #undef SYMENGINE_ENUM
 };
 

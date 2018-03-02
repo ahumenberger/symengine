@@ -313,43 +313,49 @@ const RCP<const UniversalSet> &UniversalSet::getInstance()
     return a;
 }
 
-FiniteSet::FiniteSet(const set_basic &container) : container_(container)
+template<class set_type, TypeID type_id>
+FiniteSetT<set_type, type_id>::FiniteSetT(const set_type &container) : container_(container)
 {
     SYMENGINE_ASSIGN_TYPEID()
-    SYMENGINE_ASSERT(FiniteSet::is_canonical(container_));
+    SYMENGINE_ASSERT((FiniteSetT<set_type, type_id>::is_canonical(container_)));
 }
 
-bool FiniteSet::is_canonical(const set_basic &container)
+template<class set_type, TypeID type_id>
+bool FiniteSetT<set_type, type_id>::is_canonical(const set_type &container)
 {
     return container.size() != 0;
 }
 
-hash_t FiniteSet::__hash__() const
+template<class set_type, TypeID type_id>
+hash_t FiniteSetT<set_type, type_id>::__hash__() const
 {
-    hash_t seed = FINITESET;
+    hash_t seed = type_id;
     for (const auto &a : container_)
         hash_combine<Basic>(seed, *a);
     return seed;
 }
 
-bool FiniteSet::__eq__(const Basic &o) const
+template<class set_type, TypeID type_id>
+bool FiniteSetT<set_type, type_id>::__eq__(const Basic &o) const
 {
-    if (is_a<FiniteSet>(o)) {
-        const FiniteSet &other = down_cast<const FiniteSet &>(o);
+    if (is_a<FiniteSetT<set_type, type_id>>(o)) {
+        const FiniteSetT<set_type, type_id> &other = down_cast<const FiniteSetT<set_type, type_id> &>(o);
         return unified_eq(container_, other.container_);
     }
     return false;
 }
 
-int FiniteSet::compare(const Basic &o) const
+template<class set_type, TypeID type_id>
+int FiniteSetT<set_type, type_id>::compare(const Basic &o) const
 {
     // compares two FiniteSet based on their length
-    SYMENGINE_ASSERT(is_a<FiniteSet>(o))
-    const FiniteSet &other = down_cast<const FiniteSet &>(o);
+    SYMENGINE_ASSERT((is_a<FiniteSetT<set_type, type_id>>(o)))
+    const FiniteSetT<set_type, type_id> &other = down_cast<const FiniteSetT<set_type, type_id> &>(o);
     return unified_compare(container_, other.container_);
 }
 
-RCP<const Boolean> FiniteSet::contains(const RCP<const Basic> &a) const
+template<class set_type, TypeID type_id>
+RCP<const Boolean> FiniteSetT<set_type, type_id>::contains(const RCP<const Basic> &a) const
 {
     set_basic rest;
     for (const auto &elem : container_) {
@@ -366,6 +372,7 @@ RCP<const Boolean> FiniteSet::contains(const RCP<const Basic> &a) const
     }
 }
 
+template<>
 RCP<const Set> FiniteSet::set_union(const RCP<const Set> &o) const
 {
     if (is_a<FiniteSet>(*o)) {
@@ -425,6 +432,7 @@ RCP<const Set> FiniteSet::set_union(const RCP<const Set> &o) const
     return SymEngine::make_set_union({rcp_from_this_cast<const Set>(), o});
 }
 
+template<>
 RCP<const Set> FiniteSet::set_intersection(const RCP<const Set> &o) const
 {
     if (is_a<FiniteSet>(*o)) {
@@ -453,6 +461,7 @@ RCP<const Set> FiniteSet::set_intersection(const RCP<const Set> &o) const
     throw SymEngineException("Not implemented Intersection class");
 }
 
+template<>
 RCP<const Set> FiniteSet::set_complement(const RCP<const Set> &o) const
 {
     if (is_a<FiniteSet>(*o)) {
@@ -509,10 +518,15 @@ RCP<const Set> FiniteSet::set_complement(const RCP<const Set> &o) const
     return SymEngine::set_complement_helper(rcp_from_this_cast<const Set>(), o);
 }
 
+template<>
 RCP<const Set> FiniteSet::create(const set_basic &container) const
 {
     return finiteset(container);
 }
+
+// Explicit template instantiation
+template class FiniteSetT<set_basic, FINITESET>;
+// template class FiniteSetT<multiset_basic, FINITEMULTISET>;
 
 Union::Union(const set_set &in) : container_(in)
 {

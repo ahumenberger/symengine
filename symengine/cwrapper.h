@@ -35,7 +35,9 @@ typedef symengine_exceptions_t CWRAPPER_OUTPUT_TYPE;
 typedef enum {
 #define SYMENGINE_INCLUDE_ALL
 #define SYMENGINE_ENUM(type, Class) SYMENGINE_##type,
+#define SYMENGINE_ENUM_TEMPLATE(type, Class) SYMENGINE_ENUM(type, Class)
 #include "symengine/type_codes.inc"
+#undef SYMENGINE_ENUM_TEMPLATE
 #undef SYMENGINE_ENUM
 #undef SYMENGINE_INCLUDE_ALL
     SYMENGINE_TypeID_Count
