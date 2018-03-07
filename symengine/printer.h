@@ -194,6 +194,7 @@ public:
     void bvisit(const Piecewise &x);
     void bvisit(const EmptySet &x);
     void bvisit(const FiniteSet &x);
+    void bvisit(const FiniteMultiSet &x);
     void bvisit(const UniversalSet &x);
     void bvisit(const ConditionSet &x);
     void bvisit(const Contains &x);

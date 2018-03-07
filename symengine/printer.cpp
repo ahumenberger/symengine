@@ -310,6 +310,13 @@ void StrPrinter::bvisit(const FiniteSet &x)
     str_ = s.str();
 }
 
+void StrPrinter::bvisit(const FiniteMultiSet &x)
+{
+    std::ostringstream s;
+    s << x.get_container();
+    str_ = s.str();
+}
+
 void StrPrinter::bvisit(const ConditionSet &x)
 {
     std::ostringstream s;

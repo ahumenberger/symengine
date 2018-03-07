@@ -90,6 +90,11 @@ std::ostream &operator<<(std::ostream &out, const SymEngine::set_basic &d)
     return SymEngine::print_vec_rcp(out, d);
 }
 
+std::ostream &operator<<(std::ostream &out, const SymEngine::multiset_basic &d)
+{
+    return SymEngine::print_vec_rcp(out, d);
+}
+
 std::ostream &operator<<(std::ostream &out, const SymEngine::map_int_Expr &d)
 {
     return SymEngine::print_map(out, d);

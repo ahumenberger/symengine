@@ -19,6 +19,8 @@ using SymEngine::Interval;
 using SymEngine::interval;
 using SymEngine::FiniteSet;
 using SymEngine::finiteset;
+using SymEngine::FiniteMultiSet;
+using SymEngine::finitemultiset;
 using SymEngine::Set;
 using SymEngine::EmptySet;
 using SymEngine::emptyset;
@@ -398,6 +400,121 @@ TEST_CASE("FiniteSet : Basic", "[basic]")
     REQUIRE(eq(*r3, *universalset()));
     REQUIRE(not r1->is_superset(r4));
     REQUIRE(r1->is_proper_subset(r4));
+}
+
+TEST_CASE("FiniteMultiSet : Basic", "[basic]")
+{
+    RCP<const Set> r1 = finitemultiset({zero, zero, one, symbol("x")});
+    std::cout << "Size(r1): " << r1->get_args().size() << std::endl;
+    RCP<const Set> r2 = finiteset({zero, one, integer(2)});
+    RCP<const Set> r3 = r1->set_union(r2); // {0, 0, 1, 2, x}
+    REQUIRE(eq(*r3, *finitemultiset({zero, zero, one, integer(2), symbol("x")})));
+
+    r2 = finitemultiset({zero, one, integer(2)});
+    r3 = r1->set_union(r2); // {0, 0, 1, 2, x}
+    REQUIRE(eq(*r3, *finitemultiset({zero, zero, one, integer(2), symbol("x")})));
+    
+    r3 = r1->set_intersection(r2); // {0, 1}
+    REQUIRE(eq(*r3, *finitemultiset({zero, one})));
+    REQUIRE(r3->__hash__() == finitemultiset({zero, one})->__hash__());
+    REQUIRE(r3->compare(*r2) == -1);
+    REQUIRE(eq(*r3->contains(one), *boolTrue));
+    REQUIRE(eq(*r3->contains(zero), *boolTrue));
+    REQUIRE(eq(*r3->contains(integer(3)), *boolFalse));
+    REQUIRE(r3->is_subset(r2));
+    REQUIRE(r3->is_proper_subset(r2));
+    REQUIRE(r1->get_args().size() == 4);
+
+    r1 = finitemultiset({zero, zero, one});
+    REQUIRE(r1->__str__() == "{0, 0, 1}");
+    RCP<const Set> r4 = interval(zero, one);
+    r3 = r1->set_intersection(r4);
+    REQUIRE(eq(*r3, *finitemultiset({zero, zero, one})));
+    r3 = r1->set_complement(r1);
+    REQUIRE(eq(*r3, *emptyset()));
+    r3 = r1->set_complement(r2);
+    REQUIRE(eq(*r3, *finitemultiset({integer(2)})));
+
+    r2 = finitemultiset({zero, one});
+    r3 = r2->set_union(r4);
+    REQUIRE(eq(*r3, *set_union({r2, r4})));
+    REQUIRE(r3->__str__() == "[0, 1]");
+    REQUIRE(r1->is_subset(r4));
+    REQUIRE(r1->is_proper_subset(r4));
+    r3 = SymEngine::set_union({interval(NegInf, zero, true, true),
+                               interval(zero, one, true, true),
+                               interval(one, Inf, true, true)});
+    REQUIRE(eq(*r2->set_complement(interval(NegInf, Inf, true, true)), *r3));
+
+    r3 = SymEngine::set_union(
+        {interval(NegInf, real_double(1.0), true, true),
+         interval(real_double(1.0), real_double(2.0), true, true),
+         interval(real_double(2.0), Inf, true, true)});
+    r2 = finiteset({real_double(2.0), real_double(1.0)});
+    REQUIRE(eq(*r2->set_complement(interval(NegInf, Inf, true, true)), *r3));
+
+    r3 = SymEngine::set_union(
+        {interval(integer(-3), Rational::from_mpq(rational_class(3, 4)), true,
+                  true),
+         interval(Rational::from_mpq(rational_class(3, 4)),
+                  Rational::from_mpq(rational_class(4, 3)), true, true),
+         interval(Rational::from_mpq(rational_class(4, 3)), integer(3), true,
+                  true)});
+    r2 = finiteset({Rational::from_mpq(rational_class(3, 4)),
+                    Rational::from_mpq(rational_class(4, 3))});
+    REQUIRE(
+        eq(*r2->set_complement(interval(integer(-3), integer(3), true, true)),
+           *r3));
+
+    r3 = finitemultiset({symbol("x"), symbol("x"), symbol("y"), symbol("z")});
+    r2 = interval(integer(5), integer(10));
+    r3 = r3->set_complement(r2);
+    REQUIRE(is_a<Complement>(*r3));
+    auto &r5 = down_cast<const Complement &>(*r3);
+    REQUIRE(eq(*r5.get_container(),
+               *finitemultiset({symbol("x"), symbol("x"), symbol("y"), symbol("z")})));
+    REQUIRE(eq(*r5.get_universe(), *r2));
+
+    r4 = interval(zero, zero);
+    r1 = finitemultiset({zero});
+    REQUIRE(r1->is_subset(r4));
+    REQUIRE(not r1->is_proper_subset(r4));
+    REQUIRE(r1->__eq__(*r4));
+    REQUIRE(r4->__eq__(*r1));
+    r1 = finitemultiset({one, zero, one});
+    r4 = interval(zero, one, true, true); // (0, 1)
+    r3 = r1->set_union(r4);
+    r2 = interval(zero, one); // [0, 1]
+    REQUIRE(eq(*r2, *r3));
+    REQUIRE(eq(*r2, *set_union({r1, r4})));
+    REQUIRE(eq(*(r4->set_complement(r1)), *r1));
+    REQUIRE(eq(*(r1->set_complement(r4)), *r4));
+
+    // r1 = finiteset({zero, one, integer(2)});
+    // r3 = r1->set_union(r4);
+    // REQUIRE(eq(*r3, *set_union({r1, r4})));
+    // r4 = interval(zero, one, false, true); // [0, 1)
+    // r3 = r1->set_union(r4);
+    // REQUIRE(eq(*r3, *set_union({r1, r4})));
+
+    // r4 = emptyset();
+    // r3 = r2->set_intersection(r4);
+    // REQUIRE(eq(*r3, *emptyset()));
+    // r3 = r2->set_union(r4);
+    // REQUIRE(eq(*r3, *r2));
+    // REQUIRE(eq(*r3, *set_union({r2, r4})));
+    // REQUIRE(r1->is_superset(r4));
+    // REQUIRE(not r1->is_proper_subset(r4));
+    // REQUIRE(eq(*r1->set_complement(r4), *r4));
+
+    // r4 = universalset();
+    // r3 = r2->set_intersection(r4);
+    // REQUIRE(eq(*r3, *r2));
+    // r3 = r2->set_union(r4);
+    // REQUIRE(eq(*r3, *set_union({r2, r4})));
+    // REQUIRE(eq(*r3, *universalset()));
+    // REQUIRE(not r1->is_superset(r4));
+    // REQUIRE(r1->is_proper_subset(r4));
 }
 
 TEST_CASE("Union : Basic", "[basic]")
